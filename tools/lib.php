@@ -36,6 +36,25 @@ function item_game($dir, $rel) {
     return '<li><a href="' . file_url($dir, $target) . '">' . $label . '</a></li>';
 }
 
+function render_links($dir) {
+    $file = ROOT . "/uploads/$dir/links.txt";
+    if (!is_file($file)) return "";
+    $html = "";
+    foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === "") continue;
+        if ($line[0] === "#") {
+            $html .= '<li><b>' . htmlspecialchars(trim(substr($line, 1))) . '</b></li>';
+            continue;
+        }
+        $parts = array_map("trim", explode("|", $line, 2));
+        if (count($parts) < 2 || !preg_match('#^https?://#i', $parts[1])) continue;
+        $html .= '<li><a href="' . htmlspecialchars($parts[1]) . '">'
+               . htmlspecialchars($parts[0]) . '</a> (Link)</li>';
+    }
+    return $html;
+}
+
 function render_section($dir, $exts, $item) {
     $groups = [];
     foreach (list_files($dir, $exts) as $rel) {
@@ -51,6 +70,7 @@ function render_section($dir, $exts, $item) {
             $html .= $item($dir, $rel);
         }
     }
+    $html .= render_links($dir);
     return $html ?: "<li>Empty</li>";
 }
 
